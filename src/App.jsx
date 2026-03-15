@@ -329,9 +329,8 @@ function AuthScreen({ onLogin, onRegisterPending }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, phone: fullPhone }),
           }).catch(() => {}); // silencioso si falla
-          // El email de confirmación se envía automáticamente, pero dejamos avanzar al usuario
-          const displayName = name || data.user.email?.split("@")[0];
-          onLogin({ ...data.user, name: displayName, arquetipo: null, xp: 0, coins: 50, premium: false }, true);
+          // Mostrar pantalla de verificación — el usuario DEBE confirmar su email antes de continuar
+          onRegisterPending(email);
         }
       }
     } catch (err) {
@@ -1567,19 +1566,26 @@ export default function App() {
 
     // Escuchar todos los cambios de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+      if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session?.user) {
+        const user = session.user;
+        // Solo proceder si el email está confirmado
+        if (!user.email_confirmed_at && !user.confirmed_at) {
+          // El email aún no está verificado — ignorar este evento
+          return;
+        }
+
         // Verificar si ya existe perfil; si no, crearlo
         const { data: existing } = await supabase
           .from("profiles")
           .select("id, arquetipo, name, xp, coins, premium, phone")
-          .eq("id", session.user.id)
+          .eq("id", user.id)
           .single();
 
         if (!existing) {
-          const metaName = session.user.user_metadata?.name || session.user.email?.split("@")[0];
-          const metaPhone = session.user.user_metadata?.phone || null;
+          const metaName = user.user_metadata?.name || user.email?.split("@")[0];
+          const metaPhone = user.user_metadata?.phone || null;
           await supabase.from("profiles").insert({
-            id: session.user.id,
+            id: user.id,
             name: metaName,
             phone: metaPhone,
             arquetipo: null,
@@ -1587,11 +1593,9 @@ export default function App() {
             coins: 50,
             premium: false,
           });
-          // Nuevo usuario — ir al quiz
-          handleLoginStatus({ ...session.user, name: metaName, arquetipo: null, xp: 0, coins: 50, premium: false }, true);
+          handleLoginStatus({ ...user, name: metaName, arquetipo: null, xp: 0, coins: 50, premium: false }, true);
         } else {
-          // Usuario existente — cargar perfil y navegar
-          handleLoginStatus({ ...session.user, ...existing }, !existing.arquetipo);
+          handleLoginStatus({ ...user, ...existing }, !existing.arquetipo);
         }
       } else if (event === "SIGNED_OUT" || !session) {
         setAuthUser(null);
