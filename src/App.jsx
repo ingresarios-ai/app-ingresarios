@@ -1765,7 +1765,11 @@ export default function App() {
 
         {/* Logo */}
         <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <img src="/logo-blanco.png" alt="INGRESARIOS" style={{ height: 26, display: "block" }} />
+          <img 
+            src="/logo-negro.png" 
+            alt="INGRESARIOS" 
+            style={{ height: 26, display: "block", filter: "brightness(0) invert(1)" }} 
+          />
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00f5a0", animation: "pulse-dot 2s infinite" }} />
             <span style={{ fontSize: 11, color: "rgba(174,185,225,0.5)", letterSpacing: 0.5 }}>Plataforma activa</span>
