@@ -1555,12 +1555,20 @@ export default function App() {
     // Obtener sesión actual al iniciar
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        handleLoginStatus({ ...session.user, ...profile }, false);
+        const user = session.user;
+        // Solo proceder si el email está confirmado
+        if (user.email_confirmed_at || user.confirmed_at) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          handleLoginStatus({ ...user, ...profile }, false);
+        } else {
+          // Sesión existe pero email no confirmado -> forzar pantalla de verificación
+          setPendingEmail(user.email);
+          setView("verify_email");
+        }
       }
     });
 
@@ -1570,7 +1578,9 @@ export default function App() {
         const user = session.user;
         // Solo proceder si el email está confirmado
         if (!user.email_confirmed_at && !user.confirmed_at) {
-          // El email aún no está verificado — ignorar este evento
+          // El email aún no está verificado — mostrar pantalla de verificación
+          setPendingEmail(user.email);
+          setView("verify_email");
           return;
         }
 
@@ -1611,6 +1621,13 @@ export default function App() {
   }, []);
 
   const handleLoginStatus = (user, isNew) => {
+    // Doble verificación: si el email no está confirmado, no dejar pasar
+    if (!user.email_confirmed_at && !user.confirmed_at) {
+      setPendingEmail(user.email);
+      setView("verify_email");
+      return;
+    }
+
     setAuthUser(user);
     setNom(user.name || user.email?.split("@")[0] || "");
     setArq(user.arquetipo);
@@ -1623,6 +1640,7 @@ export default function App() {
       setView("main");
     }
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
