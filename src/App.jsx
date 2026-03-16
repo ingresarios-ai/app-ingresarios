@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { supabase } from "./supabaseClient";
+import LandingPage from "./LandingPage";
 
 // ── QUIZ DATA ─────────────────────────────────────────────────
 const QUIZ = [
@@ -235,7 +236,7 @@ const DIAL_CODES = [
 ];
 
 // ── AUTHENTICATION COMPONENT ─────────────────────────────────
-function AuthScreen({ onLogin, onRegisterPending }) {
+function AuthScreen({ onLogin, onRegisterPending, isMobile }) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -366,10 +367,28 @@ function AuthScreen({ onLogin, onRegisterPending }) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: "#04070F", color: "#fff", fontFamily: "'Inter', sans-serif", overflow: "hidden" }}>
+    <div style={{ 
+      minHeight: "100vh", 
+      display: "flex", 
+      flexDirection: isMobile ? "column" : "row",
+      background: "#04070F", 
+      color: "#fff", 
+      fontFamily: "'Inter', sans-serif", 
+      overflowX: "hidden" 
+    }}>
 
       {/* ── LEFT PANEL ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 56px", position: "relative", overflow: "hidden", minWidth: 0 }}>
+      <div style={{ 
+        flex: isMobile ? "none" : 1, 
+        display: "flex", 
+        flexDirection: "column", 
+        justifyContent: "space-between", 
+        padding: isMobile ? "40px 24px" : "48px 56px", 
+        position: "relative", 
+        overflow: "hidden", 
+        minWidth: 0,
+        height: isMobile ? (isLogin ? "35vh" : "25vh") : "auto"
+      }}>
         {/* Chart Background Image */}
         <div style={{
           position: "absolute", inset: 0,
@@ -414,7 +433,7 @@ function AuthScreen({ onLogin, onRegisterPending }) {
               {isLogin ? "Plataforma de Trading de Élite" : "Únete a la Comunidad"}
             </span>
           </div>
-          <h2 style={{ fontSize: 42, fontWeight: 900, lineHeight: 1.1, letterSpacing: -1.5, margin: "0 0 20px" }}>
+          <h2 style={{ fontSize: isMobile ? 32 : 42, fontWeight: 900, lineHeight: 1.1, letterSpacing: -1.5, margin: "0 0 20px" }}>
             {isLogin ? (
               <><span style={{ color: "#fff" }}>Bienvenido</span><br /><span style={{ color: accentColor }}> de vuelta.</span></>
             ) : (
@@ -437,16 +456,28 @@ function AuthScreen({ onLogin, onRegisterPending }) {
           </div>
         </div>
 
-        {/* Testimonial */}
-        <div style={{ position: "relative", zIndex: 2, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "20px 24px" }}>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, margin: 0 }}>
-            {testimonials[Math.floor(Date.now() / 1000) % testimonials.length]}
-          </p>
-        </div>
+        {/* Testimonial - Hidden on mobile to save space */}
+        {!isMobile && (
+          <div style={{ position: "relative", zIndex: 2, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "20px 24px" }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, margin: 0 }}>
+              {testimonials[Math.floor(Date.now() / 1000) % testimonials.length]}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── RIGHT PANEL ── */}
-      <div style={{ width: 480, flexShrink: 0, background: "rgba(10, 16, 35, 0.95)", borderLeft: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "56px 48px", position: "relative" }}>
+      <div style={{ 
+        width: isMobile ? "100%" : 480, 
+        flexShrink: 0, 
+        background: isMobile ? "transparent" : "rgba(10, 16, 35, 0.95)", 
+        borderLeft: isMobile ? "none" : "1px solid rgba(255,255,255,0.06)", 
+        display: "flex", 
+        flexDirection: "column", 
+        justifyContent: "center", 
+        padding: isMobile ? "32px 24px 60px" : "56px 48px", 
+        position: "relative" 
+      }}>
 
         <div style={{ marginBottom: 40 }}>
           <h1 style={{ fontWeight: 900, fontSize: 26, margin: "0 0 6px", letterSpacing: -0.5 }}>
@@ -732,7 +763,7 @@ function PremiumModal({ onClose }) {
 // ════════════════════════════════════════════════════════════════
 // QUIZ SCREEN
 // ════════════════════════════════════════════════════════════════
-function QuizScreen({ userName, onComplete }) {
+function QuizScreen({ userName, onComplete, isMobile }) {
   const [step, setStep] = useState(0); // 0-8 = preguntas
   const [respuestas, setResp] = useState([]);
   const [seleccion, setSel] = useState(null);
@@ -760,7 +791,7 @@ function QuizScreen({ userName, onComplete }) {
 
   // PREGUNTAS
   return (
-    <div style={{ minHeight: "100vh", background: "#080c10", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: "#080c10", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: isMobile ? "24px 16px" : 20 }}>
       <div style={{ maxWidth: 540, width: "100%" }}>
         {/* Progress */}
         <div style={{ marginBottom: 28 }}>
@@ -782,9 +813,9 @@ function QuizScreen({ userName, onComplete }) {
         </div>
 
         {/* Pregunta */}
-        <div style={{ ...S.card, marginBottom: 16, padding: "28px 24px", textAlign: "center", background: "rgba(255,255,255,0.03)" }}>
-          <div style={{ fontSize: 44, marginBottom: 16 }}>{q.emoji}</div>
-          <div style={{ fontWeight: 800, fontSize: 18, lineHeight: 1.4, color: "#fff" }}>{q.pregunta}</div>
+        <div style={{ ...S.card, marginBottom: 16, padding: isMobile ? "20px 16px" : "28px 24px", textAlign: "center", background: "rgba(255,255,255,0.03)" }}>
+          <div style={{ fontSize: isMobile ? 32 : 44, marginBottom: 16 }}>{q.emoji}</div>
+          <div style={{ fontWeight: 800, fontSize: isMobile ? 16 : 18, lineHeight: 1.4, color: "#fff" }}>{q.pregunta}</div>
         </div>
 
         {/* Opciones */}
@@ -811,7 +842,7 @@ function QuizScreen({ userName, onComplete }) {
 // ════════════════════════════════════════════════════════════════
 // RESULTADO SCREEN
 // ════════════════════════════════════════════════════════════════
-function ResultadoScreen({ nombre, arquetipo, onEnter }) {
+function ResultadoScreen({ nombre, arquetipo, onEnter, isMobile }) {
   const A = ARQUETIPOS[arquetipo];
   const [genyInsight, setGenyInsight] = useState("");
   const [loadingGeny, setLoadingGeny] = useState(false);
@@ -831,17 +862,17 @@ function ResultadoScreen({ nombre, arquetipo, onEnter }) {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080c10", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div style={{ minHeight: "100vh", background: "#080c10", display: "flex", alignItems: "center", justifyContent: "center", padding: isMobile ? "32px 16px" : 20 }}>
       <div style={{ maxWidth: 560, width: "100%" }}>
         {/* Header resultado */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
             <img src="/logo-negro.png" alt="INGRESARIOS" style={{ height: 22, width: "auto", filter: "brightness(0) invert(1)", opacity: 0.7 }} />
           </div>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>{A.emoji}</div>
-          <div style={{ fontWeight: 900, fontSize: 28, color: A.color, marginBottom: 6 }}>{A.nombre}</div>
-          <div style={{ color: "#888", fontSize: 14, fontStyle: "italic" }}>{A.subtitulo}</div>
-          <div style={{ color: "#666", fontSize: 13, marginTop: 8 }}>Hola, <span style={{ color: "#fff", fontWeight: 700 }}>{nombre}</span></div>
+          <div style={{ fontSize: isMobile ? 48 : 64, marginBottom: 12 }}>{A.emoji}</div>
+          <div style={{ fontWeight: 900, fontSize: isMobile ? 24 : 28, color: A.color, marginBottom: 6 }}>{A.nombre}</div>
+          <div style={{ color: "#888", fontSize: isMobile ? 13 : 14, fontStyle: "italic" }}>{A.subtitulo}</div>
+          <div style={{ color: "#666", fontSize: isMobile ? 12 : 13, marginTop: 8 }}>Hola, <span style={{ color: "#fff", fontWeight: 700 }}>{nombre}</span></div>
         </div>
 
         {/* Descripción */}
@@ -850,7 +881,7 @@ function ResultadoScreen({ nombre, arquetipo, onEnter }) {
         </div>
 
         {/* Fortaleza / Desafío / Próximo Paso */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
           {[["💪 Fortaleza", A.fortaleza, "#00f5a0"], ["⚡ Desafío", A.desafio, "#ff9500"], ["🚀 Próximo Paso", A.proxPaso, "#00d4ff"]].map(([l, v, c]) => (
             <div key={l} style={{ ...S.cardSm, borderTop: `3px solid ${c}` }}>
               <div style={{ color: c, fontSize: 10, fontWeight: 700, marginBottom: 6 }}>{l}</div>
@@ -892,17 +923,19 @@ function ResultadoScreen({ nombre, arquetipo, onEnter }) {
 // ════════════════════════════════════════════════════════════════
 // PEDEM MODALS
 // ════════════════════════════════════════════════════════════════
-function PedemPlanModal({ sym, dir, px, onConfirm, onCancel }) {
+function PedemPlanModal({ sym, dir, px, onConfirm, onCancel, isMobile }) {
   const [f, setF] = useState({ setup: "", tesis: "", rr: "1:2", sl: "", tp: "" });
   const ok = f.setup && f.tesis && f.sl && f.tp;
   const fields = [{ k: "setup", l: "📋 Setup / Patrón técnico", ph: "Ej: Ruptura de resistencia con engulfing...", multi: true }, { k: "tesis", l: "🧠 Tesis del trade", ph: "¿Por qué este trade?", multi: true }, { k: "rr", l: "⚖️ Relación R:R", ph: "Ej: 1:2" }, { k: "sl", l: "🛑 Stop Loss", ph: `Ej: ${(px * .99).toFixed(2)}` }, { k: "tp", l: "🎯 Take Profit", ph: `Ej: ${(px * 1.02).toFixed(2)}` }];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }}>
       <div style={{ ...S.card, maxWidth: 480, width: "100%", maxHeight: "92vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ fontSize: 20 }}>📐</div>
-          <div><div style={{ fontWeight: 900, fontSize: 14, color: "#00f5a0" }}>PEDEM · PLANEAR</div><div style={{ color: "#666", fontSize: 11 }}>Completa tu plan antes de ejecutar</div></div>
-          <div style={{ marginLeft: "auto", ...S.cardSm, padding: "4px 10px" }}><span style={{ color: dir === "BUY" ? "#00f5a0" : "#ff6b6b", fontWeight: 700 }}>{dir}</span><span style={{ color: "#888" }}> {sym} @ </span><span>${fmt(px)}</span></div>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ fontSize: 20 }}>📐</div>
+            <div><div style={{ fontWeight: 900, fontSize: 14, color: "#00f5a0" }}>PEDEM · PLANEAR</div><div style={{ color: "#666", fontSize: 11 }}>Completa tu plan antes de ejecutar</div></div>
+          </div>
+          <div style={{ marginLeft: isMobile ? 0 : "auto", ...S.cardSm, padding: "4px 10px", marginTop: isMobile ? 8 : 0 }}><span style={{ color: dir === "BUY" ? "#00f5a0" : "#ff6b6b", fontWeight: 700 }}>{dir}</span><span style={{ color: "#888" }}> {sym} @ </span><span>${fmt(px)}</span></div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {fields.map(({ k, l, ph, multi }) => (
@@ -920,7 +953,7 @@ function PedemPlanModal({ sym, dir, px, onConfirm, onCancel }) {
     </div>
   );
 }
-function PedemCloseModal({ trade, curPrice, onConfirm, onCancel }) {
+function PedemCloseModal({ trade, curPrice, onConfirm, onCancel, isMobile }) {
   const [f, setF] = useState({ que_paso: "", errores: "", mejora: "" });
   const pl = (curPrice - trade.entry) * trade.qty * (trade.dir === "BUY" ? 1 : -1);
   const ok = f.que_paso && f.mejora;
@@ -928,9 +961,9 @@ function PedemCloseModal({ trade, curPrice, onConfirm, onCancel }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }}>
       <div style={{ ...S.card, maxWidth: 460, width: "100%", maxHeight: "92vh", overflowY: "auto" }}>
         <div style={{ fontWeight: 900, fontSize: 14, color: "#00d4ff", marginBottom: 14 }}>📓 PEDEM · EVALUAR & MEJORAR</div>
-        <div style={{ ...S.cardSm, marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
-          {[["Trade", `${trade.dir} ${trade.sym}×${trade.qty}`], ["Entrada", `$${fmt(trade.entry)}`], ["Salida", `$${fmt(curPrice)}`]].map(([l, v]) => (<div key={l}><div style={{ color: "#666", fontSize: 10 }}>{l}</div><div style={{ fontWeight: 700 }}>{v}</div></div>))}
-          <div><div style={{ color: "#666", fontSize: 10 }}>P&L</div><div style={{ fontWeight: 900, fontSize: 15, color: pl >= 0 ? "#00f5a0" : "#ff6b6b" }}>{fmtP(pl)}</div></div>
+        <div style={{ ...S.cardSm, marginBottom: 12, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          {[["Trade", `${trade.dir} ${trade.sym}×${trade.qty}`], ["Entrada", `$${fmt(trade.entry)}`], ["Salida", `$${fmt(curPrice)}`]].map(([l, v]) => (<div key={l} style={{ minWidth: isMobile ? "45%" : "auto" }}><div style={{ color: "#666", fontSize: 10 }}>{l}</div><div style={{ fontWeight: 700, fontSize: isMobile ? 12 : 14 }}>{v}</div></div>))}
+          <div style={{ minWidth: isMobile ? "45%" : "auto" }}><div style={{ color: "#666", fontSize: 10 }}>P&L</div><div style={{ fontWeight: 900, fontSize: isMobile ? 14 : 15, color: pl >= 0 ? "#00f5a0" : "#ff6b6b" }}>{fmtP(pl)}</div></div>
         </div>
         {[["que_paso", "📝 ¿Qué pasó?", "Describe cómo se desarrolló el trade..."], ["errores", "⚠️ Errores (opcional)", "SL no respetado, revenge trading..."], ["mejora", "🚀 ¿Qué mejorarás?", "Acción concreta para el próximo trade..."]].map(([k, l, ph]) => (
           <div key={k} style={{ marginBottom: 10 }}><label style={S.label}>{l}</label><textarea rows={2} style={S.textarea} placeholder={ph} value={f[k]} onChange={e => setF(p => ({ ...p, [k]: e.target.value }))} /></div>
@@ -947,7 +980,7 @@ function PedemCloseModal({ trade, curPrice, onConfirm, onCancel }) {
 // ════════════════════════════════════════════════════════════════
 // RETO SCREEN
 // ════════════════════════════════════════════════════════════════
-function RetoScreen({ tipo, data, color, completados, setCompletados, respuestas, setRespuestas, addXp, addCoins }) {
+function RetoScreen({ tipo, data, color, completados, setCompletados, respuestas, setRespuestas, addXp, addCoins, isMobile }) {
   const [diaActivo, setDiaActivo] = useState(0);
   const [resp, setResp] = useState({ ejercicio: "", reflexion: "" });
   const [genyResp, setGenyResp] = useState("");
@@ -985,7 +1018,7 @@ function RetoScreen({ tipo, data, color, completados, setCompletados, respuestas
           );
         })}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
         <div>
           <div style={{ ...S.card, borderColor: `${dia.bgColor}33`, background: `linear-gradient(135deg,${dia.bgColor}10,rgba(255,255,255,0.02))`, marginBottom: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}><div style={{ fontSize: 26 }}>{dia.emoji}</div><div><div style={{ fontWeight: 900, fontSize: 14, color: dia.bgColor }}>Día {dia.dia} — {dia.titulo}</div><div style={{ color: "#777", fontSize: 11 }}>{dia.subtitulo} · ⏱ {dia.duracion}</div></div></div>
@@ -995,9 +1028,9 @@ function RetoScreen({ tipo, data, color, completados, setCompletados, respuestas
         </div>
         <div style={S.card}>
           <div style={{ fontWeight: 700, marginBottom: 12 }}>{completado ? "✅ Día Completado" : "📝 Tu Respuesta"}</div>
-          <div style={{ marginBottom: 10 }}><label style={S.label}>Ejercicio del día</label><textarea rows={4} style={{ ...S.textarea, opacity: completado ? 0.6 : 1 }} disabled={completado} placeholder="Escribe tu respuesta al ejercicio..." value={completado ? savedResp.ejercicio || "" : resp.ejercicio} onChange={e => setResp(p => ({ ...p, ejercicio: e.target.value }))} /></div>
-          <div style={{ marginBottom: 12 }}><label style={S.label}>Reflexión</label><textarea rows={3} style={{ ...S.textarea, opacity: completado ? 0.6 : 1 }} disabled={completado} placeholder="Tu respuesta a la pregunta..." value={completado ? savedResp.reflexion || "" : resp.reflexion} onChange={e => setResp(p => ({ ...p, reflexion: e.target.value }))} /></div>
-          {!completado && <button style={{ ...glowBtn(color), width: "100%", textAlign: "center", opacity: (resp.ejercicio && resp.reflexion) ? 1 : 0.4 }} disabled={!resp.ejercicio || !resp.reflexion} onClick={completar}>✅ Completar Día {dia.dia} · +40 XP · +20 🪙</button>}
+          <div style={{ marginBottom: 10 }}><label style={S.label}>Ejercicio del día</label><textarea rows={4} style={{ ...S.textarea, opacity: completado ? 0.6 : 1, fontSize: isMobile ? 14 : 13 }} disabled={completado} placeholder="Escribe tu respuesta al ejercicio..." value={completado ? savedResp.ejercicio || "" : resp.ejercicio} onChange={e => setResp(p => ({ ...p, ejercicio: e.target.value }))} /></div>
+          <div style={{ marginBottom: 12 }}><label style={S.label}>Reflexión</label><textarea rows={3} style={{ ...S.textarea, opacity: completado ? 0.6 : 1, fontSize: isMobile ? 14 : 13 }} disabled={completado} placeholder="Tu respuesta a la pregunta..." value={completado ? savedResp.reflexion || "" : resp.reflexion} onChange={e => setResp(p => ({ ...p, reflexion: e.target.value }))} /></div>
+          {!completado && <button style={{ ...glowBtn(color), width: "100%", textAlign: "center", padding: isMobile ? "14px" : "12px", fontSize: isMobile ? 14 : 13, opacity: (resp.ejercicio && resp.reflexion) ? 1 : 0.4 }} disabled={!resp.ejercicio || !resp.reflexion} onClick={completar}>✅ Completar Día {dia.dia} · +40 XP · +20 🪙</button>}
           {(loadingGeny || genyResp) && <div style={{ marginTop: 12, ...S.cardSm, borderColor: `${color}44`, background: `${color}08` }}><div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}><span style={{ fontSize: 16 }}>🤖</span><span style={{ color, fontWeight: 700, fontSize: 12 }}>Feedback de GENY</span></div>{loadingGeny ? <div style={{ color: "#666" }}>Analizando...</div> : <div style={{ color: "#ccc", fontSize: 12, lineHeight: 1.7 }}>{genyResp}</div>}</div>}
         </div>
       </div>
@@ -1009,7 +1042,7 @@ function RetoScreen({ tipo, data, color, completados, setCompletados, respuestas
 // ════════════════════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════════════════════
-function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombra, openPremium }) {
+function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombra, openPremium, isMobile }) {
   const A = ARQUETIPOS[arquetipo] || ARQUETIPOS.explorador;
   const metrics = [
     { label: "Balance Virtual", value: "$100,000", sub: "USD", color: "#6C72FF", icon: "◈" },
@@ -1020,7 +1053,7 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
     { label: "Trades Cerrados", value: "0", sub: "operaciones", color: "#ff9f7f", icon: "◇" },
   ];
   return (
-    <div style={{ padding: "28px 32px", maxWidth: 1200, margin: "0 auto", paddingBottom: 60, width: "100%" }}>
+    <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", maxWidth: 1200, margin: "0 auto", paddingBottom: 60, width: "100%" }}>
       <style>{`
         .metric-card { transition: all 0.25s ease; }
         .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important; }
@@ -1034,9 +1067,10 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
       <div style={{
         background: "linear-gradient(135deg, rgba(108,114,255,0.12) 0%, rgba(0,212,255,0.06) 50%, rgba(191,95,255,0.08) 100%)",
         border: "1px solid rgba(108,114,255,0.2)",
-        borderRadius: 16, padding: "28px 32px", marginBottom: 28,
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        flexWrap: "wrap", gap: 20,
+        padding: isMobile ? "20px" : "28px 32px", marginBottom: 28,
+        display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center",
+        flexDirection: isMobile ? "column" : "row",
+        gap: 20,
         position: "relative", overflow: "hidden",
       }}>
         {/* BG decoration */}
@@ -1065,9 +1099,9 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-end" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: isMobile ? "flex-start" : "flex-end", width: isMobile ? "100%" : "auto" }}>
           {/* XP Bar */}
-          <div style={{ width: 280 }}>
+          <div style={{ width: isMobile ? "100%" : 280 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: "rgba(174,185,225,0.5)", fontWeight: 600 }}>Progreso Nivel 2</span>
               <span style={{ fontSize: 11, color: A.color, fontWeight: 700 }}>0 / 100 XP</span>
@@ -1095,7 +1129,7 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
       </div>
 
       {/* Metrics Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(172px, 1fr))", gap: 14, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fit, minmax(172px, 1fr))", gap: isMobile ? 10 : 14, marginBottom: 28 }}>
         {metrics.map((m, i) => (
           <div
             key={i}
@@ -1224,49 +1258,49 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
 // ════════════════════════════════════════════════════════════════
 // PERFIL DE USUARIO
 // ════════════════════════════════════════════════════════════════
-function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout }) {
+function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout, isMobile }) {
   const A = ARQUETIPOS[arquetipo] || ARQUETIPOS.explorador;
   const isPremium = authUser?.premium;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px", paddingBottom: 100 }}>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? "24px 16px" : "40px 24px", paddingBottom: 100 }}>
       {/* Cabecera del Perfil */}
-      <div style={{ ...S.card, display: "flex", alignItems: "center", gap: 32, marginBottom: 32, position: "relative", overflow: "hidden" }}>
+      <div style={{ ...S.card, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 20 : 32, marginBottom: 32, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -80, right: -80, width: 250, height: 250, background: isPremium ? "#ffd700" : A.color, filter: "blur(100px)", opacity: 0.15 }} />
-        <div style={{ width: 100, height: 100, borderRadius: 50, background: "rgba(255,255,255,0.05)", border: `2px solid ${isPremium ? "#ffd700" : A.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, boxShadow: `0 0 30px ${isPremium ? "#ffd700" : A.color}33` }}>
+        <div style={{ width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, borderRadius: 50, background: "rgba(255,255,255,0.05)", border: `2px solid ${isPremium ? "#ffd700" : A.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 36 : 48, boxShadow: `0 0 30px ${isPremium ? "#ffd700" : A.color}33` }}>
           {isPremium ? "👑" : "👤"}
         </div>
         <div>
-          <h1 style={{ fontWeight: 900, fontSize: 32, marginBottom: 4, display: "flex", alignItems: "center", gap: 12 }}>
+          <h1 style={{ fontWeight: 900, fontSize: isMobile ? 24 : 32, marginBottom: 4, display: "flex", alignItems: "center", gap: 12 }}>
             {authUser?.name}
-            {isPremium && <span style={{ fontSize: 12, padding: "4px 10px", background: "linear-gradient(90deg,#ffd700,#ffaa00)", color: "#000", borderRadius: 12, fontWeight: 900, letterSpacing: 1 }}>PRO</span>}
+            {isPremium && <span style={{ fontSize: 10, padding: "3px 8px", background: "linear-gradient(90deg,#ffd700,#ffaa00)", color: "#000", borderRadius: 12, fontWeight: 900, letterSpacing: 1 }}>PRO</span>}
           </h1>
-          <div style={{ color: "#888", fontSize: 15, marginBottom: 12 }}>{authUser?.email}</div>
+          <div style={{ color: "#888", fontSize: isMobile ? 13 : 15, marginBottom: 12 }}>{authUser?.email}</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", background: `${A.color}15`, borderRadius: 20, border: `1px solid ${A.color}33` }}>
-            <span style={{ fontSize: 18 }}>{A.emoji}</span>
-            <span style={{ color: A.color, fontWeight: 700, fontSize: 13 }}>Arquetipo: {A.nombre}</span>
+            <span style={{ fontSize: 16 }}>{A.emoji}</span>
+            <span style={{ color: A.color, fontWeight: 700, fontSize: 12 }}>Arquetipo: {A.nombre}</span>
           </div>
         </div>
       </div>
 
       {/* Tarjeta de Suscripción */}
       <div style={{ ...S.card, marginBottom: 32, borderColor: isPremium ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.05)", background: isPremium ? "linear-gradient(160deg,rgba(255,215,0,0.03),transparent)" : S.card.background }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "stretch" : "flex-start", flexDirection: isMobile ? "column" : "row", gap: 20 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <div style={{ fontSize: 28 }}>{isPremium ? "⭐" : "✅"}</div>
-              <h2 style={{ fontWeight: 900, fontSize: 22, color: isPremium ? "#ffd700" : "#fff" }}>
+              <div style={{ fontSize: 24 }}>{isPremium ? "⭐" : "✅"}</div>
+              <h2 style={{ fontWeight: 900, fontSize: isMobile ? 18 : 22, color: isPremium ? "#ffd700" : "#fff" }}>
                 Plan {isPremium ? "Premium" : "Básico"}
               </h2>
             </div>
-            <p style={{ color: "#aaa", fontSize: 14, maxWidth: 400, lineHeight: 1.6 }}>
+            <p style={{ color: "#aaa", fontSize: 13, maxWidth: 400, lineHeight: 1.6 }}>
               {isPremium
                 ? "Tienes acceso ilimitado a todos los mercados del simulador PEDEM, acompañamiento de GENY IA sin restricciones y la Academia 7 Mundos."
                 : "Estás operando con acceso limitado. Desbloquea más activos, IA avanzada y la Academia 7 Mundos."}
             </p>
           </div>
           {!isPremium && (
-            <button onClick={openPremium} style={{ background: "linear-gradient(135deg,#ffd700,#ffaa00)", color: "#000", border: "none", borderRadius: 12, padding: "16px 32px", fontWeight: 900, fontSize: 15, cursor: "pointer", boxShadow: "0 10px 25px rgba(255,215,0,0.25)" }}>
+            <button onClick={openPremium} style={{ background: "linear-gradient(135deg,#ffd700,#ffaa00)", color: "#000", border: "none", borderRadius: 12, padding: isMobile ? "14px 20px" : "16px 32px", fontWeight: 900, fontSize: 14, cursor: "pointer", boxShadow: "0 10px 25px rgba(255,215,0,0.25)" }}>
               Hacer Upgrade Ahora
             </button>
           )}
@@ -1310,7 +1344,7 @@ function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout }) {
 // ════════════════════════════════════════════════════════════════
 // SIMULADOR
 // ════════════════════════════════════════════════════════════════
-function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBitacora, openPremium }) {
+function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBitacora, openPremium, isMobile }) {
   const [sym, setSym] = useState("SPX");
   const [qty, setQty] = useState(1);
   const [modalPlan, setModalPlan] = useState(null); // {sym, dir, px}
@@ -1372,9 +1406,9 @@ function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBi
         </div>
       </div>
 
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", flexDirection: isMobile ? "column" : "row" }}>
         {/* Main Chart Area */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#0a0e14" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#0a0e14", height: isMobile ? "50vh" : "auto" }}>
           {SYMS[sym].premium ? (
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", textAlign: "center", padding: 20 }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>⭐</div>
@@ -1397,10 +1431,10 @@ function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBi
                 </AreaChart>
               </ResponsiveContainer>
               {actTrade && (
-                <div style={{ position: "absolute", bottom: 24, left: 24, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", border: "1px solid #333", borderRadius: 12, padding: "16px 20px", display: "flex", gap: 24, alignItems: "center", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
-                  <div><div style={{ color: "#888", fontSize: 10, textTransform: "uppercase" }}>Posición</div><div style={{ fontWeight: 900, fontSize: 16, color: actTrade.dir === "BUY" ? "#00f5a0" : "#ff6b6b" }}>{actTrade.dir} {sym} × {actTrade.qty}</div></div>
-                  <div><div style={{ color: "#888", fontSize: 10, textTransform: "uppercase" }}>P&L</div><div style={{ fontWeight: 900, fontSize: 18, color: pl >= 0 ? "#00f5a0" : "#ff6b6b" }}>{fmtP(pl)}</div></div>
-                  <button onClick={() => setModalClose({ trade: actTrade, curPrice })} style={{ ...glowBtn("#ff6b6b"), padding: "8px 16px", fontSize: 13 }}>Cerrar & Evaluar →</button>
+                <div style={{ position: "absolute", bottom: isMobile ? 12 : 24, left: isMobile ? 12 : 24, right: isMobile ? 12 : "auto", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)", border: "1px solid #333", borderRadius: 12, padding: isMobile ? "12px 16px" : "16px 20px", display: "flex", gap: isMobile ? 12 : 24, alignItems: "center", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+                  <div><div style={{ color: "#888", fontSize: 10, textTransform: "uppercase" }}>Posición</div><div style={{ fontWeight: 900, fontSize: isMobile ? 14 : 16, color: actTrade.dir === "BUY" ? "#00f5a0" : "#ff6b6b" }}>{actTrade.dir} {sym} × {actTrade.qty}</div></div>
+                  <div><div style={{ color: "#888", fontSize: 10, textTransform: "uppercase" }}>P&L</div><div style={{ fontWeight: 900, fontSize: isMobile ? 16 : 18, color: pl >= 0 ? "#00f5a0" : "#ff6b6b" }}>{fmtP(pl)}</div></div>
+                  <button onClick={() => setModalClose({ trade: actTrade, curPrice })} style={{ ...glowBtn("#ff6b6b"), padding: isMobile ? "6px 12px" : "8px 16px", fontSize: isMobile ? 12 : 13 }}>Cerrar & Evaluar →</button>
                 </div>
               )}
             </div>
@@ -1408,7 +1442,7 @@ function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBi
         </div>
 
         {/* Right Panel - Action */}
-        <div style={{ width: 320, background: "#0d1117", borderLeft: "1px solid #222", display: "flex", flexDirection: "column" }}>
+        <div style={{ width: isMobile ? "100%" : 320, background: "#0d1117", borderLeft: isMobile ? "none" : "1px solid #222", borderTop: isMobile ? "1px solid #222" : "none", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: 16, borderBottom: "1px solid #222" }}>
             <div style={{ fontWeight: 900, fontSize: 14, marginBottom: 16, color: "#ccc" }}>NUEVO TRADE — PEDEM</div>
             <div style={{ marginBottom: 16 }}>
@@ -1438,8 +1472,8 @@ function Simulador({ portfolio, setPortfolio, trades, setTrades, bitacora, setBi
           </div>
         </div>
       </div>
-      {modalPlan && <PedemPlanModal sym={modalPlan.sym} dir={modalPlan.dir} px={modalPlan.px} onConfirm={execTrade} onCancel={() => setModalPlan(null)} />}
-      {modalClose && <PedemCloseModal trade={modalClose.trade} curPrice={modalClose.curPrice} onConfirm={closeTrade} onCancel={() => setModalClose(null)} />}
+      {modalPlan && <PedemPlanModal sym={modalPlan.sym} dir={modalPlan.dir} px={modalPlan.px} onConfirm={execTrade} onCancel={() => setModalPlan(null)} isMobile={isMobile} />}
+      {modalClose && <PedemCloseModal trade={modalClose.trade} curPrice={modalClose.curPrice} onConfirm={closeTrade} onCancel={() => setModalClose(null)} isMobile={isMobile} />}
     </div>
   );
 }
@@ -1474,7 +1508,7 @@ function VerifyEmailScreen({ email, onBack }) {
         </div>
 
         {/* Logo */}
-        <img src="/logo-blanco.png" alt="INGRESARIOS" style={{ height: 28, marginBottom: 28, filter: "brightness(1)" }} />
+        <img src="/logo-negro.png" alt="INGRESARIOS" style={{ height: 28, marginBottom: 28, filter: "brightness(0) invert(1)" }} />
 
         <h1 style={{ fontWeight: 900, fontSize: 28, color: "#fff", margin: "0 0 12px", letterSpacing: -0.5 }}>
           Verifica tu correo
@@ -1547,6 +1581,14 @@ export default function App() {
   const [showPremium, setShowPremium] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAcademyMenu, setShowAcademyMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [xp, setXp] = useState(0);
   const [coins, setCoins] = useState(0);
 
@@ -1643,12 +1685,19 @@ export default function App() {
 
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setAuthUser(null);
-    setNom("");
-    setArq(null);
-    setView("auth");
-    setTab("dash");
+    setShowUserMenu(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Siempre limpiar estado local y volver a auth aunque falle signOut
+      setAuthUser(null);
+      setNom("");
+      setArq(null);
+      setView("auth");
+      setTab("dash");
+    }
   };
 
   const saveUserProgress = async (updatedFields) => {
@@ -1711,10 +1760,15 @@ export default function App() {
     padding: "10px 12px"
   });
 
+  if (window.location.pathname === "/landing") {
+    return <LandingPage onStart={() => { window.location.pathname = "/"; }} isMobile={isMobile} />;
+  }
+
   if (view === "auth") return (
     <AuthScreen
       onLogin={handleLoginStatus}
       onRegisterPending={(email) => { setPendingEmail(email); setView("verify_email"); }}
+      isMobile={isMobile}
     />
   );
 
@@ -1725,17 +1779,25 @@ export default function App() {
     />
   );
 
-  if (view === "quiz") return <QuizScreen userName={authUser?.name} onComplete={(n, a) => {
+  if (view === "quiz") return <QuizScreen userName={authUser?.name} isMobile={isMobile} onComplete={(n, a) => {
     setNom(n);
     setArq(a);
     saveUserProgress({ name: n, arquetipo: a });
     setView("res");
   }} />;
 
-  if (view === "res") return <ResultadoScreen nombre={nombre} arquetipo={arquetipo} onEnter={() => setView("main")} />;
+  if (view === "res") return <ResultadoScreen nombre={nombre} arquetipo={arquetipo} isMobile={isMobile} onEnter={() => setView("main")} />;
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#04070F", color: "#FFFFFF", fontFamily: "'Inter', 'Mona Sans', system-ui, sans-serif" }}>
+    <div style={{ 
+      display: "flex", 
+      flexDirection: isMobile ? "column" : "row",
+      height: "100vh", 
+      background: "#04070F", 
+      color: "#FFFFFF", 
+      fontFamily: "'Inter', 'Mona Sans', system-ui, sans-serif",
+      overflow: "hidden"
+    }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         ::-webkit-scrollbar { width: 4px; }
@@ -1747,7 +1809,59 @@ export default function App() {
         .stat-card-glow:hover { box-shadow: 0 0 20px rgba(108,114,255,0.15); transform: translateY(-1px); }
         .upgrade-btn:hover { box-shadow: 0 8px 30px rgba(108,114,255,0.5) !important; transform: translateY(-1px); }
         @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .mobile-sidebar-enter { transform: translateX(-100%); transition: transform 0.3s ease-out; }
+        .mobile-sidebar-enter-active { transform: translateX(0); }
       `}</style>
+
+      {/* ─── MOBILE TOP BAR ─────────────────────────────────────── */}
+      {isMobile && (
+        <div style={{
+          height: 60,
+          background: "#080F25",
+          borderBottom: "1px solid rgba(108,114,255,0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          zIndex: 1000,
+          flexShrink: 0
+        }}>
+          <img 
+            src="/logo-negro.png" 
+            alt="INGRESARIOS" 
+            style={{ height: 20, filter: "brightness(0) invert(1)" }} 
+          />
+          <button 
+            onClick={() => setShowMobileSidebar(true)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#fff",
+              fontSize: 24,
+              cursor: "pointer",
+              padding: 0,
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
+            ☰
+          </button>
+        </div>
+      )}
+
+      {/* ─── MOBILE SIDEBAR BACKDROP ────────────────────────────── */}
+      {isMobile && showMobileSidebar && (
+        <div 
+          onClick={() => setShowMobileSidebar(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(4px)",
+            zIndex: 1100,
+          }}
+        />
+      )}
 
       {/* ─── SIDEBAR ─────────────────────────────────────────────── */}
       <div style={{
@@ -1758,22 +1872,35 @@ export default function App() {
         flexDirection: "column",
         flexShrink: 0,
         height: "100vh",
-        position: "sticky",
+        position: isMobile ? "fixed" : "sticky",
+        left: isMobile ? (showMobileSidebar ? 0 : -260) : 0,
         top: 0,
         boxShadow: "4px 0 24px rgba(0,0,0,0.4)",
+        zIndex: 1200,
+        transition: "left 0.3s ease-in-out",
       }}>
 
-        {/* Logo */}
-        <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <img 
-            src="/logo-negro.png" 
-            alt="INGRESARIOS" 
-            style={{ height: 26, display: "block", filter: "brightness(0) invert(1)" }} 
-          />
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00f5a0", animation: "pulse-dot 2s infinite" }} />
-            <span style={{ fontSize: 11, color: "rgba(174,185,225,0.5)", letterSpacing: 0.5 }}>Plataforma activa</span>
+        {/* Logo (Hidden on mobile inside sidebar if we want to save space, but let's keep it with a close button) */}
+        <div style={{ padding: "24px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <img 
+              src="/logo-negro.png" 
+              alt="INGRESARIOS" 
+              style={{ height: 26, display: "block", filter: "brightness(0) invert(1)" }} 
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00f5a0", animation: "pulse-dot 2s infinite" }} />
+              <span style={{ fontSize: 11, color: "rgba(174,185,225,0.5)", letterSpacing: 0.5 }}>Plataforma activa</span>
+            </div>
           </div>
+          {isMobile && (
+            <button 
+              onClick={() => setShowMobileSidebar(false)}
+              style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 20, cursor: "pointer" }}
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         {/* User Card */}
@@ -1973,13 +2100,13 @@ export default function App() {
         flex: 1, height: "100vh", overflowY: "auto", display: "flex", flexDirection: "column",
         background: "radial-gradient(ellipse at 60% 10%, rgba(108,114,255,0.04) 0%, transparent 60%), #04070F",
       }}>
-        {tab === "dash" && <Dashboard authUser={authUser} nombre={nombre} arquetipo={arquetipo} goSim={() => setTab("sim")} goRetoFlow={() => setTab("ret-f")} goRetoSombra={() => setTab("ret-s")} openPremium={() => setShowPremium(true)} />}
-        {tab === "sim" && <Simulador portfolio={portfolio} setPortfolio={setPort} trades={trades} setTrades={setTrades} bitacora={bitacora} setBitacora={setBitacora} openPremium={() => setShowPremium(true)} />}
-        {tab === "ret-s" && <div style={{ padding: "28px 32px", maxWidth: 900, margin: "0 auto", width: "100%" }}><RetoScreen tipo="sombra" data={SOMBRA} color="#ff6b6b" completados={compSombra} setCompletados={setCompSombra} respuestas={respSombra} setRespuestas={setRespSombra} addXp={x => setXp(p => p + x)} addCoins={c => setCoins(p => p + c)} /></div>}
-        {tab === "ret-f" && <div style={{ padding: "28px 32px", maxWidth: 900, margin: "0 auto", width: "100%" }}><RetoScreen tipo="flow" data={FLOW} color="#00d4ff" completados={compFlow} setCompletados={setCompFlow} respuestas={respFlow} setRespuestas={setRespFlow} addXp={x => setXp(p => p + x)} addCoins={c => setCoins(p => p + c)} /></div>}
+        {tab === "dash" && <Dashboard authUser={authUser} nombre={nombre} arquetipo={arquetipo} goSim={() => setTab("sim")} goRetoFlow={() => setTab("ret-f")} goRetoSombra={() => setTab("ret-s")} openPremium={() => setShowPremium(true)} isMobile={isMobile} />}
+        {tab === "sim" && <Simulador portfolio={portfolio} setPortfolio={setPort} trades={trades} setTrades={setTrades} bitacora={bitacora} setBitacora={setBitacora} openPremium={() => setShowPremium(true)} isMobile={isMobile} />}
+        {tab === "ret-s" && <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", maxWidth: 900, margin: "0 auto", width: "100%" }}><RetoScreen tipo="sombra" data={SOMBRA} color="#ff6b6b" completados={compSombra} setCompletados={setCompSombra} respuestas={respSombra} setRespuestas={setRespSombra} addXp={x => setXp(p => p + x)} addCoins={c => setCoins(p => p + c)} isMobile={isMobile} /></div>}
+        {tab === "ret-f" && <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", maxWidth: 900, margin: "0 auto", width: "100%" }}><RetoScreen tipo="flow" data={FLOW} color="#00d4ff" completados={compFlow} setCompletados={setCompFlow} respuestas={respFlow} setRespuestas={setRespFlow} addXp={x => setXp(p => p + x)} addCoins={c => setCoins(p => p + c)} isMobile={isMobile} /></div>}
 
         {tab === "bit" && (
-          <div style={{ padding: "28px 32px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
+          <div style={{ padding: isMobile ? "20px 16px" : "28px 32px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
               <div style={{ width: 3, height: 20, background: "linear-gradient(180deg, #00d4ff, #6C72FF)", borderRadius: 2 }} />
               <h2 style={{ fontWeight: 900, fontSize: 20, margin: 0, letterSpacing: -0.5 }}>Bitácora PEDEM</h2>
@@ -2024,7 +2151,7 @@ export default function App() {
           </div>
         )}
 
-        {tab === "profile" && <ProfileScreen authUser={authUser} arquetipo={arquetipo} openPremium={() => setShowPremium(true)} handleLogout={handleLogout} />}
+        {tab === "profile" && <ProfileScreen authUser={authUser} arquetipo={arquetipo} openPremium={() => setShowPremium(true)} handleLogout={handleLogout} isMobile={isMobile} />}
 
         {tab === "geny" && (
           <div style={{ padding: "28px 32px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
