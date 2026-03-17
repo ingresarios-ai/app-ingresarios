@@ -913,7 +913,7 @@ function ResultadoScreen({ nombre, arquetipo, onEnter, isMobile }) {
         </button>
 
         <div style={{ textAlign: "center", marginTop: 14, color: "#333", fontSize: 12 }}>
-          Tu arquetipo y sesión quedan guardados · Puedes repetir el quiz cuando quieras
+          Tu arquetipo y sesión han sido guardados permanentemente en tu perfil.
         </div>
       </div>
     </div>
@@ -1258,9 +1258,18 @@ function Dashboard({ authUser, nombre, arquetipo, goSim, goRetoFlow, goRetoSombr
 // ════════════════════════════════════════════════════════════════
 // PERFIL DE USUARIO
 // ════════════════════════════════════════════════════════════════
-function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout, isMobile }) {
+function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout, isMobile, onUpdateName }) {
   const A = ARQUETIPOS[arquetipo] || ARQUETIPOS.explorador;
   const isPremium = authUser?.premium;
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(authUser?.name || "");
+
+  const handleSaveName = async () => {
+    if (!tempName.trim()) return;
+    const success = await onUpdateName(tempName.trim());
+    if (success) setIsEditingName(false);
+  };
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: isMobile ? "24px 16px" : "40px 24px", paddingBottom: 100 }}>
@@ -1270,11 +1279,53 @@ function ProfileScreen({ authUser, arquetipo, openPremium, handleLogout, isMobil
         <div style={{ width: isMobile ? 80 : 100, height: isMobile ? 80 : 100, borderRadius: 50, background: "rgba(255,255,255,0.05)", border: `2px solid ${isPremium ? "#ffd700" : A.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: isMobile ? 36 : 48, boxShadow: `0 0 30px ${isPremium ? "#ffd700" : A.color}33` }}>
           {isPremium ? "👑" : "👤"}
         </div>
-        <div>
-          <h1 style={{ fontWeight: 900, fontSize: isMobile ? 24 : 32, marginBottom: 4, display: "flex", alignItems: "center", gap: 12 }}>
-            {authUser?.name}
-            {isPremium && <span style={{ fontSize: 10, padding: "3px 8px", background: "linear-gradient(90deg,#ffd700,#ffaa00)", color: "#000", borderRadius: 12, fontWeight: 900, letterSpacing: 1 }}>PRO</span>}
-          </h1>
+        <div style={{ flex: 1, width: "100%" }}>
+          {isEditingName ? (
+            <div style={{ marginBottom: 16 }}>
+              <input
+                value={tempName}
+                onChange={e => setTempName(e.target.value)}
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: `1px solid ${A.color}44`,
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  color: "#fff",
+                  fontSize: isMobile ? 20 : 24,
+                  fontWeight: 800,
+                  width: "100%",
+                  marginBottom: 12,
+                  outline: "none"
+                }}
+                autoFocus
+              />
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={handleSaveName}
+                  style={{ background: "#00f5a0", color: "#000", border: "none", padding: "6px 16px", borderRadius: 6, fontWeight: 700, cursor: "pointer", fontSize: 13 }}
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => { setIsEditingName(false); setTempName(authUser?.name || ""); }}
+                  style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "none", padding: "6px 16px", borderRadius: 6, fontWeight: 700, cursor: "pointer", fontSize: 13 }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <h1 style={{ fontWeight: 900, fontSize: isMobile ? 24 : 32, marginBottom: 4, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              {authUser?.name}
+              {isPremium && <span style={{ fontSize: 10, padding: "3px 8px", background: "linear-gradient(90deg,#ffd700,#ffaa00)", color: "#000", borderRadius: 12, fontWeight: 900, letterSpacing: 1 }}>PRO</span>}
+              <button
+                onClick={() => setIsEditingName(true)}
+                style={{ background: "rgba(255,255,255,0.05)", border: "none", padding: 8, borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <span style={{ fontSize: 14 }}>✏️</span>
+              </button>
+            </h1>
+          )}
           <div style={{ color: "#888", fontSize: isMobile ? 13 : 15, marginBottom: 12 }}>{authUser?.email}</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", background: `${A.color}15`, borderRadius: 20, border: `1px solid ${A.color}33` }}>
             <span style={{ fontSize: 16 }}>{A.emoji}</span>
@@ -1676,10 +1727,32 @@ export default function App() {
     setXp(user.xp || 0);
     setCoins(user.coins || 50);
 
-    if (isNew || !user.arquetipo) {
+    // El quiz solo se muestra si el usuario NO tiene un arquetipo guardado
+    if (!user.arquetipo) {
       setView("quiz");
     } else {
       setView("main");
+    }
+  };
+
+  const updateProfileName = async (newName) => {
+    if (!authUser) return false;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ name: newName })
+        .eq("id", authUser.id);
+
+      if (error) throw error;
+
+      // Actualizar estados locales
+      setNom(newName);
+      setAuthUser(prev => ({ ...prev, name: newName }));
+      return true;
+    } catch (err) {
+      console.error("Error updating name:", err);
+      alert("Error al actualizar el nombre. Inténtalo de nuevo.");
+      return false;
     }
   };
 
@@ -2151,7 +2224,7 @@ export default function App() {
           </div>
         )}
 
-        {tab === "profile" && <ProfileScreen authUser={authUser} arquetipo={arquetipo} openPremium={() => setShowPremium(true)} handleLogout={handleLogout} isMobile={isMobile} />}
+        {tab === "profile" && <ProfileScreen authUser={authUser} arquetipo={arquetipo} openPremium={() => setShowPremium(true)} handleLogout={handleLogout} isMobile={isMobile} onUpdateName={updateProfileName} />}
 
         {tab === "geny" && (
           <div style={{ padding: "28px 32px", maxWidth: 800, margin: "0 auto", width: "100%" }}>
