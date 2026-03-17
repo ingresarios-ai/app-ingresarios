@@ -1682,7 +1682,10 @@ export default function App() {
             setView("verify_email");
           }
         }
+      } catch (err) {
+        console.error("Initialization error:", err);
       } finally {
+        // Garantizar que la pantalla de carga desaparezca
         setInitializing(false);
       }
     });
@@ -1859,6 +1862,8 @@ export default function App() {
     return <LandingPage onStart={() => { window.location.pathname = "/"; }} isMobile={isMobile} />;
   }
 
+  if (initializing) return <SplashScreen />;
+
   if (view === "auth") return (
     <AuthScreen
       onLogin={handleLoginStatus}
@@ -1866,8 +1871,6 @@ export default function App() {
       isMobile={isMobile}
     />
   );
-
-  if (initializing) return <SplashScreen />;
 
   if (view === "verify_email") return (
     <VerifyEmailScreen
