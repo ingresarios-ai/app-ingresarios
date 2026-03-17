@@ -1629,6 +1629,7 @@ function SplashScreen() {
 // ════════════════════════════════════════════════════════════════
 export default function App() {
   const [initializing, setInitializing] = useState(true);
+  const initRef = useRef(false);
   const [view, setView] = useState("auth"); // auth, verify_email, quiz, res, main
   const [authUser, setAuthUser] = useState(null);
   const [pendingEmail, setPendingEmail] = useState(""); // email pendiente de verificación
@@ -1663,68 +1664,69 @@ export default function App() {
 
   // Verificar sesión Supabase al montar
   useEffect(() => {
-    // Obtener sesión actual al iniciar
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Timeout de seguridad: desaparecer logo pase lo que pase tras 3.5s
+    const safetyTimeout = setTimeout(() => {
+      setInitializing(false);
+    }, 3500);
+
+    const initialize = async (session) => {
+      if (initRef.current) return;
+      initRef.current = true;
+      clearTimeout(safetyTimeout);
+
       try {
         if (session?.user) {
           const user = session.user;
-          // Solo proceder si el email está confirmado
+          // Solo si el email está confirmado
           if (user.email_confirmed_at || user.confirmed_at) {
             const { data: profile } = await supabase
               .from("profiles")
-              .select("*")
+              .select("id, arquetipo, name, xp, coins, premium, phone")
               .eq("id", user.id)
               .single();
-            handleLoginStatus({ ...user, ...profile }, false);
+            
+            if (profile) {
+              handleLoginStatus({ ...user, ...profile }, false);
+            } else {
+              // Si no hay perfil, lo creamos
+              const metaName = user.user_metadata?.name || user.email?.split("@")[0];
+              const metaPhone = user.user_metadata?.phone || null;
+              const { data: newProfile } = await supabase.from("profiles").insert({
+                id: user.id,
+                name: metaName,
+                phone: metaPhone,
+                arquetipo: null,
+                xp: 0,
+                coins: 50,
+                premium: false,
+              }).select().single();
+              handleLoginStatus({ ...user, ...(newProfile || {}) }, true);
+            }
           } else {
-            // Sesión existe pero email no confirmado -> forzar pantalla de verificación
             setPendingEmail(user.email);
             setView("verify_email");
           }
         }
       } catch (err) {
-        console.error("Initialization error:", err);
+        console.error("Init error:", err);
       } finally {
-        // Garantizar que la pantalla de carga desaparezca
         setInitializing(false);
+      }
+    };
+
+    // 1. Check inmediato
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) initialize(session);
+      else {
+        // Si no hay sesión inmediata, damos un pequeño margen para onAuthStateChange
+        setTimeout(() => setInitializing(false), 1000);
       }
     });
 
-    // Escuchar todos los cambios de auth
+    // 2. Escuchar cambios de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session?.user) {
-        const user = session.user;
-        // Solo proceder si el email está confirmado
-        if (!user.email_confirmed_at && !user.confirmed_at) {
-          // El email aún no está verificado — mostrar pantalla de verificación
-          setPendingEmail(user.email);
-          setView("verify_email");
-          return;
-        }
-
-        // Verificar si ya existe perfil; si no, crearlo
-        const { data: existing } = await supabase
-          .from("profiles")
-          .select("id, arquetipo, name, xp, coins, premium, phone")
-          .eq("id", user.id)
-          .single();
-
-        if (!existing) {
-          const metaName = user.user_metadata?.name || user.email?.split("@")[0];
-          const metaPhone = user.user_metadata?.phone || null;
-          await supabase.from("profiles").insert({
-            id: user.id,
-            name: metaName,
-            phone: metaPhone,
-            arquetipo: null,
-            xp: 0,
-            coins: 50,
-            premium: false,
-          });
-          handleLoginStatus({ ...user, name: metaName, arquetipo: null, xp: 0, coins: 50, premium: false }, true);
-        } else {
-          handleLoginStatus({ ...user, ...existing }, !existing.arquetipo);
-        }
+      if (session?.user) {
+        initialize(session);
       } else if (event === "SIGNED_OUT" || !session) {
         setAuthUser(null);
         setNom("");
@@ -1732,10 +1734,14 @@ export default function App() {
         setPendingEmail("");
         setView("auth");
         setTab("dash");
+        setInitializing(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleLoginStatus = (user, isNew) => {
