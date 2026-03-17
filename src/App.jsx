@@ -1608,9 +1608,27 @@ function VerifyEmailScreen({ email, onBack }) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// SPLASH SCREEN (Loading phase)
+// ════════════════════════════════════════════════════════════════
+function SplashScreen() {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#04070F" }}>
+      <img src="/logo-negro.png" alt="INGRESARIOS" style={{ height: 40, filter: "brightness(0) invert(1)", animation: "pulse 2s infinite ease-in-out" }} />
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; transform: scale(0.98); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
 // TABS / MAIN LAYOUT
 // ════════════════════════════════════════════════════════════════
 export default function App() {
+  const [initializing, setInitializing] = useState(true);
   const [view, setView] = useState("auth"); // auth, verify_email, quiz, res, main
   const [authUser, setAuthUser] = useState(null);
   const [pendingEmail, setPendingEmail] = useState(""); // email pendiente de verificación
@@ -1647,21 +1665,25 @@ export default function App() {
   useEffect(() => {
     // Obtener sesión actual al iniciar
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const user = session.user;
-        // Solo proceder si el email está confirmado
-        if (user.email_confirmed_at || user.confirmed_at) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-          handleLoginStatus({ ...user, ...profile }, false);
-        } else {
-          // Sesión existe pero email no confirmado -> forzar pantalla de verificación
-          setPendingEmail(user.email);
-          setView("verify_email");
+      try {
+        if (session?.user) {
+          const user = session.user;
+          // Solo proceder si el email está confirmado
+          if (user.email_confirmed_at || user.confirmed_at) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", user.id)
+              .single();
+            handleLoginStatus({ ...user, ...profile }, false);
+          } else {
+            // Sesión existe pero email no confirmado -> forzar pantalla de verificación
+            setPendingEmail(user.email);
+            setView("verify_email");
+          }
         }
+      } finally {
+        setInitializing(false);
       }
     });
 
@@ -1844,6 +1866,8 @@ export default function App() {
       isMobile={isMobile}
     />
   );
+
+  if (initializing) return <SplashScreen />;
 
   if (view === "verify_email") return (
     <VerifyEmailScreen
