@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { supabase } from "./supabaseClient";
 import LandingPage from "./LandingPage";
+import AdminScreen from "./AdminScreen";
 
 // ── QUIZ DATA ─────────────────────────────────────────────────
 const QUIZ = [
@@ -236,7 +237,7 @@ const DIAL_CODES = [
 ];
 
 // ── AUTHENTICATION COMPONENT ─────────────────────────────────
-function AuthScreen({ onLogin, onRegisterPending, isMobile }) {
+function AuthScreen({ onLogin, onRegisterPending, isMobile, onAdminLogin }) {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -693,9 +694,108 @@ function AuthScreen({ onLogin, onRegisterPending, isMobile }) {
               {isLogin ? "Regístrate gratis" : "Inicia sesión"}
             </span>
           </p>
+          <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <p style={{ color: "rgba(174, 185, 225, 0.5)", fontSize: 13, marginBottom: 16 }}>
+              Al continuar, aceptas nuestros <b>Términos de Servicio</b> y <b>Política de Privacidad</b>.
+            </p>
+            <button 
+              onClick={onAdminLogin}
+              style={{ background: "transparent", border: "none", color: "rgba(108,114,255,0.4)", fontSize: 11, cursor: "pointer", fontWeight: 600, letterSpacing: 0.5 }}
+            >
+              ACCESO ADMINISTRATIVO →
+            </button>
+          </div>
         </div>
 
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN LOGIN SCREEN ─────────────────────────────────────────
+function AdminLoginScreen({ onLogin, onBack }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+        
+      if (!profile?.is_admin) {
+        await supabase.auth.signOut();
+        setError("Acceso denegado: Esta cuenta no tiene permisos de administrador.");
+      } else {
+        onLogin({ ...data.user, ...profile });
+      }
+    } catch (err) {
+      setError(err.message === "Invalid login credentials" ? "Credenciales inválidas." : err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#04070F", padding: 24 }}>
+      <div style={{ maxWidth: 400, width: "100%", background: "#101935", border: "1px solid #343B4F", borderRadius: 16, padding: 32, boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🛡️</div>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: 0 }}>Portal Administrativo</h2>
+          <p style={{ color: "rgba(174,185,225,0.5)", fontSize: 13, marginTop: 8 }}>Ingresa tus credenciales autorizadas</p>
+        </div>
+        
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: "block", fontSize: 11, color: "#AEB9E1", marginBottom: 8, fontWeight: 700, letterSpacing: 0.5 }}>EMAIL CORPORATIVO</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required
+              style={{ width: "100%", height: 50, background: "rgba(8,15,37,0.6)", border: "1px solid #343B4F", borderRadius: 10, padding: "0 16px", color: "#fff", outline: "none" }} 
+            />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: "block", fontSize: 11, color: "#AEB9E1", marginBottom: 8, fontWeight: 700, letterSpacing: 0.5 }}>CONTRASEÑA</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required
+              style={{ width: "100%", height: 50, background: "rgba(8,15,37,0.6)", border: "1px solid #343B4F", borderRadius: 10, padding: "0 16px", color: "#fff", outline: "none" }} 
+            />
+          </div>
+          
+          {error && <div style={{ background: "rgba(255,77,77,0.1)", border: "1px solid rgba(255,77,77,0.3)", borderRadius: 8, padding: 12, color: "#ff6b6b", fontSize: 12, marginBottom: 20, textAlign: "center" }}>{error}</div>}
+          
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{ width: "100%", height: 52, background: "#6C72FF", border: "none", borderRadius: 12, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", marginBottom: 16 }}
+          >
+            {loading ? "Verificando..." : "Entrar al Panel →"}
+          </button>
+          
+          <button 
+            type="button"
+            onClick={onBack}
+            style={{ width: "100%", background: "transparent", border: "none", color: "rgba(174,185,225,0.4)", fontSize: 13, cursor: "pointer" }}
+          >
+            Volver al inicio
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -1875,7 +1975,26 @@ export default function App() {
       onLogin={handleLoginStatus}
       onRegisterPending={(email) => { setPendingEmail(email); setView("verify_email"); }}
       isMobile={isMobile}
+      onAdminLogin={() => setView("admin_login")}
     />
+  );
+
+  if (view === "admin_login") return (
+    <AdminLoginScreen 
+      onLogin={(user) => { 
+        if (user.is_admin) {
+          setAuthUser(user);
+          setView("admin_panel");
+        } else {
+          alert("Acceso denegado. No eres administrador.");
+        }
+      }} 
+      onBack={() => setView("auth")} 
+    />
+  );
+
+  if (view === "admin_panel") return (
+    <AdminScreen onBack={() => { setView("auth"); setAuthUser(null); }} />
   );
 
   if (view === "verify_email") return (
