@@ -32,6 +32,13 @@ export default function AdminScreen({ onBack }) {
   };
 
   const toggleAdmin = async (userId, current) => {
+    if (userId === "594f0058-a903-4638-9fb1-a861417659f8" && current) {
+      alert("No se puede revocar el acceso al administrador principal.");
+      return;
+    }
+    
+    if (!window.confirm(`¿Estás seguro de que deseas ${current ? 'quitar' : 'dar'} acceso de administrador a este usuario?`)) return;
+
     const { error } = await supabase
       .from("profiles")
       .update({ is_admin: !current })
@@ -40,6 +47,8 @@ export default function AdminScreen({ onBack }) {
   };
 
   const togglePremium = async (userId, current) => {
+    if (!window.confirm(`¿Estás seguro de que deseas ${current ? 'quitar' : 'activar'} el plan Premium para este usuario?`)) return;
+
     const { error } = await supabase
       .from("profiles")
       .update({ premium: !current })
