@@ -695,15 +695,9 @@ function AuthScreen({ onLogin, onRegisterPending, isMobile, onAdminLogin }) {
             </span>
           </p>
           <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            <p style={{ color: "rgba(174, 185, 225, 0.5)", fontSize: 13, marginBottom: 16 }}>
+            <p style={{ color: "rgba(174, 185, 225, 0.5)", fontSize: 13, margin: 0 }}>
               Al continuar, aceptas nuestros <b>Términos de Servicio</b> y <b>Política de Privacidad</b>.
             </p>
-            <button 
-              onClick={onAdminLogin}
-              style={{ background: "transparent", border: "none", color: "rgba(108,114,255,0.4)", fontSize: 11, cursor: "pointer", fontWeight: 600, letterSpacing: 0.5 }}
-            >
-              ACCESO ADMINISTRATIVO →
-            </button>
           </div>
         </div>
 
@@ -1730,7 +1724,10 @@ function SplashScreen() {
 export default function App() {
   const [initializing, setInitializing] = useState(true);
   const initRef = useRef(false);
-  const [view, setView] = useState("auth"); // auth, verify_email, quiz, res, main
+  const [view, setView] = useState(() => {
+    if (window.location.pathname === "/admin") return "admin_login";
+    return "auth";
+  }); // auth, admin_login, verify_email, quiz, res, main
   const [authUser, setAuthUser] = useState(null);
   const [pendingEmail, setPendingEmail] = useState(""); // email pendiente de verificación
   const [tab, setTab] = useState("dash");
@@ -1975,7 +1972,6 @@ export default function App() {
       onLogin={handleLoginStatus}
       onRegisterPending={(email) => { setPendingEmail(email); setView("verify_email"); }}
       isMobile={isMobile}
-      onAdminLogin={() => setView("admin_login")}
     />
   );
 
@@ -1989,7 +1985,7 @@ export default function App() {
           alert("Acceso denegado. No eres administrador.");
         }
       }} 
-      onBack={() => setView("auth")} 
+      onBack={() => { window.location.pathname = "/"; }} 
     />
   );
 
