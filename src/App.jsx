@@ -1829,7 +1829,7 @@ export default function App() {
         setNom("");
         setArq(null);
         setPendingEmail("");
-        setView("auth");
+        setView(window.location.pathname === "/admin" ? "admin_login" : "auth");
         setTab("dash");
         setInitializing(false);
       }
@@ -1896,7 +1896,7 @@ export default function App() {
       setAuthUser(null);
       setNom("");
       setArq(null);
-      setView("auth");
+      setView(window.location.pathname === "/admin" ? "admin_login" : "auth");
       setTab("dash");
     }
   };
